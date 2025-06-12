@@ -1,4 +1,4 @@
-import AddTask from '@/components/AddTask'
+import AddTask from '../Components/AddTask'
 import React from 'react'
 
 export default function AddTaskPage() {
