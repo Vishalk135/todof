@@ -20,7 +20,7 @@ const Home: React.FC = () => {
   const router = useRouter();
 
   const fetchTasks = async () => {
-    const res = await fetch('http://localhost:4000/tasks');
+    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/tasks`);
     const data = await res.json();
     setTasks(data);
   };
