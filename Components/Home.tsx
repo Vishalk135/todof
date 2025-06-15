@@ -2,17 +2,18 @@
 import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { PencilIcon, TrashIcon } from '@heroicons/react/24/outline';
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000/tasks';
 
 interface Task {
-  id: number;
+  _id: string;
   name: string;
   description: string;
-  status: 'Complete' | 'InComplete';
+  status: 'Complete' | 'Incomplete';
 }
 
 const Home: React.FC = () => {
   const [tasks, setTasks] = useState<Task[]>([]);
-  const [editingId, setEditingId] = useState<number | null>(null);
+  const [editingId, setEditingId] = useState<string | null>(null);
   const [editForm, setEditForm] = useState({ name: '', description: '', status: 'Complete' });
   const [filter, setFilter] = useState('All');
   const [sortBy, setSortBy] = useState('name');
@@ -20,7 +21,7 @@ const Home: React.FC = () => {
   const router = useRouter();
 
   const fetchTasks = async () => {
-    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/tasks`);
+    const res = await fetch(API_URL);
     const data = await res.json();
     setTasks(data);
   };
@@ -29,13 +30,13 @@ const Home: React.FC = () => {
     fetchTasks();
   }, []);
 
-  const deleteTask = async (id: number) => {
-    await fetch(`http://localhost:4000/tasks/${id}`, { method: 'DELETE' });
+  const deleteTask = async (id: string) => {
+    await fetch(`${process.env.NEXT_PUBLIC_API_URL}/${id}`, { method: 'DELETE' });
     fetchTasks();
   };
 
   const startEditing = (task: Task) => {
-    setEditingId(task.id);
+    setEditingId(task._id);
     setEditForm({ name: task.name, description: task.description, status: task.status });
   };
 
@@ -44,8 +45,8 @@ const Home: React.FC = () => {
     setEditForm({ name: '', description: '', status: 'Complete' });
   };
 
-  const handleEditSubmit = async (id: number) => {
-    await fetch(`http://localhost:4000/tasks/${id}`, {
+  const handleEditSubmit = async (id: string) => {
+    await fetch(`${process.env.NEXT_PUBLIC_API_URL}/${id}`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(editForm),
@@ -68,7 +69,6 @@ const Home: React.FC = () => {
       <h1 className="text-4xl font-bold mb-2 text-blue-600">TODO List</h1>
 
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
-        
         <div className="flex flex-wrap gap-2">
           <select
             value={filter}
@@ -77,7 +77,7 @@ const Home: React.FC = () => {
           >
             <option value="All">All</option>
             <option value="Complete">Complete</option>
-            <option value="InComplete">InComplete</option>
+            <option value="Incomplete">Incomplete</option>
           </select>
 
           <select
@@ -98,7 +98,6 @@ const Home: React.FC = () => {
           />
         </div>
 
-        
         <button
           onClick={() => router.push('/add-task')}
           className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded text-sm transition-all shadow-md"
@@ -106,7 +105,6 @@ const Home: React.FC = () => {
           + Add Task
         </button>
       </div>
-
 
       <div className="overflow-x-auto shadow rounded-lg border border-gray-200">
         <table className="w-full table-auto bg-white">
@@ -123,13 +121,15 @@ const Home: React.FC = () => {
           <tbody>
             {filteredTasks.length > 0 ? (
               filteredTasks.map((task, index) => (
-                <tr key={task.id} className="border-t hover:bg-blue-50 transition-all text-sm">
+                <tr key={task._id} className="border-t hover:bg-blue-50 transition-all text-sm">
                   <td className="px-4 py-2">{index + 1}</td>
                   <td className="px-4 py-2">
-                    {editingId === task.id ? (
+                    {editingId === task._id ? (
                       <input
                         value={editForm.name}
-                        onChange={(e) => setEditForm({ ...editForm, name: e.target.value })}
+                        onChange={(e) =>
+                          setEditForm({ ...editForm, name: e.target.value })
+                        }
                         className="border px-2 py-1 rounded w-full"
                       />
                     ) : (
@@ -137,10 +137,12 @@ const Home: React.FC = () => {
                     )}
                   </td>
                   <td className="px-4 py-2">
-                    {editingId === task.id ? (
+                    {editingId === task._id ? (
                       <textarea
                         value={editForm.description}
-                        onChange={(e) => setEditForm({ ...editForm, description: e.target.value })}
+                        onChange={(e) =>
+                          setEditForm({ ...editForm, description: e.target.value })
+                        }
                         className="border px-2 py-1 rounded w-full"
                       />
                     ) : (
@@ -148,14 +150,19 @@ const Home: React.FC = () => {
                     )}
                   </td>
                   <td className="px-4 py-2">
-                    {editingId === task.id ? (
+                    {editingId === task._id ? (
                       <select
                         value={editForm.status}
-                        onChange={(e) => setEditForm({ ...editForm, status: e.target.value as Task['status'] })}
+                        onChange={(e) =>
+                          setEditForm({
+                            ...editForm,
+                            status: e.target.value as Task['status'],
+                          })
+                        }
                         className="border px-2 py-1 rounded"
                       >
                         <option value="Complete">Complete</option>
-                        <option value="InComplete">InComplete</option>
+                        <option value="Incomplete">Incomplete</option>
                       </select>
                     ) : (
                       <span
@@ -170,10 +177,10 @@ const Home: React.FC = () => {
                     )}
                   </td>
                   <td className="px-4 py-2">
-                    {editingId === task.id ? (
+                    {editingId === task._id ? (
                       <>
                         <button
-                          onClick={() => handleEditSubmit(task.id)}
+                          onClick={() => handleEditSubmit(task._id)}
                           className="bg-green-500 text-white px-2 py-1 rounded mr-2"
                         >
                           Save
@@ -196,7 +203,7 @@ const Home: React.FC = () => {
                   </td>
                   <td className="px-4 py-2">
                     <button
-                      onClick={() => deleteTask(task.id)}
+                      onClick={() => deleteTask(task._id)}
                       className="text-red-600 hover:text-red-800"
                     >
                       <TrashIcon className="h-6 w-6 text-black" />
